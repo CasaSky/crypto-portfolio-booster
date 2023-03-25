@@ -1,0 +1,27 @@
+@Testcontainers
+class
+
+static final DockerImageName LOCALSTACK_IMAGE = DockerImageName.parse("localstack/localstack:1.4.0");
+
+@Container
+static final LocalStackContainer LOCALSTACK = new LocalStackContainer(LOCALSTACK_IMAGE)
+        .withServices(SNS);
+
+
+@DynamicPropertySource
+static void registerPgProperties(DynamicPropertyRegistry registry) {
+    URI endpoint = LOCALSTACK.getEndpointOverride(SNS);
+    registry.add("spring.cloud.aws.sns.endpoint", endpoint::toString);
+}
+
+private String createTopic() {
+    return snsClient.createTopic(CreateTopicRequest.builder()
+                    .name("crypto-purchase")
+                    .build())
+            .topicArn();
+}
+
+
+testImplementation "org.testcontainers:junit-jupiter:1.17.6"
+testImplementation "org.testcontainers:localstack:1.17.6"
+testImplementation "com.amazonaws:aws-java-sdk-sns:1.12.266"
